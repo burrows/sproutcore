@@ -175,3 +175,41 @@ test("should pass content as context when using {{#each}} helper", function() {
 
   equals(view.$().text(), "Mac OS X 10.7: Lion Mac OS X 10.6: Snow Leopard Mac OS X 10.5: Leopard ", "prints each item in sequence");
 });
+
+test("should re-render when the content object changes", function() {
+  TemplateTests.RerenderTest = SC.TemplateCollectionView.extend({
+    content: []
+  });
+
+  var view = SC.TemplateView.create({
+    template: SC.Handlebars.compile('{{#collection TemplateTests.RerenderTest}}{{content}}{{/collection}}')
+  });
+
+  view.createLayer();
+
+  SC.run(function() {
+    view.childViews[0].set('content', ['bing', 'bat', 'bang']);
+  });
+
+  SC.run(function() {
+    view.childViews[0].set('content', ['ramalamadingdong']);
+  });
+
+  equals(view.$('li').length, 1, "rerenders with correct number of items");
+  equals(view.$('li:eq(0)').text(), "ramalamadingdong");
+
+});
+
+test("#collection helper should allow relative paths for the collection view class", function() {
+  var view = SC.TemplateView.create({
+    template: SC.Handlebars.compile('{{#collection "myCollectionView"}}{{content}}{{/collection}}'),
+    myCollectionView: SC.TemplateCollectionView.create({
+      content: ['foo', 'bar', 'baz']
+    })
+  });
+
+  SC.run(function() { view.createLayer(); });
+
+  equals(view.$('li').length, 3, '#collection should find relative collection view path');
+});
+
